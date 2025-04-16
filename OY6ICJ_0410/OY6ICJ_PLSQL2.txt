@@ -1,0 +1,181 @@
+CREATE OR REPLACE PROCEDURE NewPet(i IN NUMBER, n IN VARCHAR, f IN VARCHAR, szul IN DATE, suly IN NUMBER, e IN NUMBER, g IN VARCHAR) IS
+BEGIN
+    INSERT INTO Zoo VALUES(i, n, f, szul, suly, e, g);
+END;
+
+===================================================================================
+
+BEGIN
+    NewPet(16, 'Wilson', 'Csirke', '1/1/2024', 10, 101010, 'Kis János');
+END;
+
+===================================================================================
+
+
+
+
+CREATE OR REPLACE PROCEDURE DelPet(i IN NUMBER) IS
+    db NUMBER;
+BEGIN
+    SELECT COUNT(*) INTO db FROM Zoo WHERE ID = i;
+    IF db = 0 THEN
+        DBMS_OUTPUT.PUT_LINE('A megadott ID nem létezik!');
+    ELSE
+        DELETE FROM Zoo WHERE ID = i;
+        DBMS_OUTPUT.PUT_LINE('A rekord törölve lett!');
+    END IF;
+END;
+
+===================================================================================
+
+BEGIN
+    DelPet(100);
+    DelPet(16);
+END;
+
+===================================================================================
+
+
+
+
+CREATE OR REPLACE PROCEDURE ModPet(i IN NUMBER, fn IN VARCHAR, d IN VARCHAR) IS
+    plsql VARCHAR(500);
+BEGIN
+    plsql := 'UPDATE Zoo SET ' || fn || ' = ' || d || 'WHERE ID = ' || i;
+    EXECUTE IMMEDIATE plsql;
+END;
+
+===================================================================================
+
+SELECT * FROM Zoo;
+BEGIN
+    ModPet(16, 'Ertek', '202020');
+END;
+SELECT * FROM Zoo;
+
+===================================================================================
+
+
+
+
+CREATE OR REPLACE PROCEDURE PetData(i IN NUMBER) IS
+    db NUMBER;
+    n VARCHAR(100);
+    f VARCHAR(100);
+    g VARCHAR(100);
+BEGIN
+    SELECT COUNT(*) INTO db FROM Zoo WHERE ID = i;
+    IF db = 0 THEN
+        DBMS_OUTPUT.PUT_LINE('A megadott ID nem létezik!');
+    ELSE
+        SELECT Nev INTO n FROM Zoo WHERE ID = i;
+        SELECT Fajta INTO f FROM Zoo WHERE ID = i;
+        SELECT Gondozo INTO g FROM Zoo WHERE ID = i;
+        DBMS_OUTPUT.PUT_LINE('Az állat neve: ' || n);
+        DBMS_OUTPUT.PUT_LINE('Az állat fajtája: ' || f);
+        DBMS_OUTPUT.PUT_LINE('Az állat gondozója: ' || g);
+    END IF;
+END;
+
+===================================================================================
+
+BEGIN
+    PetData(100);
+    PetData(16);
+END;
+
+===================================================================================
+
+
+
+
+CREATE OR REPLACE PROCEDURE PetData2(n IN VARCHAR) IS
+    db NUMBER;
+    f VARCHAR(100);
+    e NUMBER;
+BEGIN
+    SELECT COUNT(*) INTO db FROM Zoo WHERE Nev = n;
+    IF db = 0 THEN
+        DBMS_OUTPUT.PUT_LINE('A megadott nevű állat létezik!');
+    ELSE
+        SELECT Fajta INTO f FROM Zoo WHERE Nev = n;
+        SELECT Ertek INTO e FROM Zoo WHERE Nev = n;
+        DBMS_OUTPUT.PUT_LINE('Az állat fajtája: ' || f);
+        DBMS_OUTPUT.PUT_LINE('Az állat értéke: ' || e);
+    END IF;
+END;
+
+===================================================================================
+
+
+BEGIN
+    PetData2('asd');
+    PetData2('Wilson');
+END;
+
+===================================================================================
+
+
+
+
+CREATE OR REPLACE FUNCTION ThereIsPetCalled(n IN VARCHAR) RETURN VARCHAR AS
+    db NUMBER;
+BEGIN
+    SELECT COUNT(*) INTO db FROM Zoo WHERE Nev = n;
+    IF db = 0 THEN
+        RETURN 'no';
+    ELSE
+        RETURN 'yes';
+    END IF;
+END;
+
+===================================================================================
+
+SELECT ThereIsPetCalled('asd') FROM DUAL;
+SELECT ThereIsPetCalled('Wilson') FROM DUAL;
+
+===================================================================================
+
+
+
+
+CREATE OR REPLACE PROCEDURE CallThereIsPetNamed(n IN VARCHAR) IS
+    res VARCHAR(3);
+BEGIN
+    SELECT ThereIsPetNamed(n) INTO res FROM DUAL;
+    IF res = 'no' THEN
+        DBMS_OUTPUT.PUT_LINE('Nincs ' || n || ' nevű állat!');
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('Van ' || n || ' nevű állat!');
+    END IF;
+END;
+
+===================================================================================
+
+BEGIN
+    CallThereIsPetNamed('asd');
+    CallThereIsPetNamed('Wilson');
+END;
+
+===================================================================================
+
+
+
+
+CREATE OR REPLACE FUNCTION Insurance RETURN NUMBER AS
+    sum1 NUMBER;
+    sum2 NUMBER;
+    sum3 NUMBER;
+    s NUMBER;
+BEGIN
+    SELECT SUM(Ertek) INTO sum1 FROM Zoo WHERE Ertek < 1000000;
+    SELECT SUM(Ertek) INTO sum2 FROM Zoo WHERE (Ertek >= 1000000 AND Ertek < 3000000);
+    SELECT SUM(Ertek) INTO sum3 FROM Zoo WHERE Ertek >= 3000000;
+
+    s := (sum1 * 1.3 / 100) + (sum2 * 1.2 / 100) + (sum3 * 1.1 / 100);
+    RETURN s;
+END;
+
+===================================================================================
+
+SELECT Insurance() FROM DUAL;
