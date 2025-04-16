@@ -1,0 +1,102 @@
+CREATE OR REPLACE PROCEDURE ErtekNovel(szazalek IN INT) IS
+BEGIN
+    UPDATE Zoo SET Ertek = Ertek + (Ertek * szazalek / 100);
+END;
+
+==================================================================
+SELECT * FROM Zoo;
+BEGIN
+    ErtekNovel(20);
+END;
+SELECT * FROM Zoo;
+
+==================================================================
+
+
+
+
+CREATE OR REPLACE PROCEDURE ErtekCsokkent(szazalek IN INT) IS
+BEGIN
+    UPDATE Zoo SET Ertek = Ertek / ((szazalek/100) + 1);
+END;
+
+==================================================================
+
+SELECT * FROM Zoo;
+BEGIN
+    ErtekCsokkent(20);
+END;
+SELECT * FROM Zoo;
+
+==================================================================
+
+
+
+
+CREATE OR REPLACE PROCEDURE OsszSuly(g IN VARCHAR) IS
+    ossz NUMBER;
+BEGIN
+    SELECT SUM(Suly) INTO ossz FROM Zoo WHERE Gondozo = g;
+    DBMS_OUTPUT.PUT_LINE('Állatok összsúlya: ' || ossz);
+END;
+
+==================================================================
+
+BEGIN
+    OsszSuly('Kis János');
+END;
+
+==================================================================
+
+
+
+
+CREATE OR REPLACE PROCEDURE OsszErtek(g IN VARCHAR) IS
+    ossz NUMBER;
+BEGIN
+    SELECT SUM(Ertek) INTO ossz FROM Zoo WHERE Gondozo = g;
+    DBMS_OUTPUT.PUT_LINE('Állatok összértéke: ' || ossz);
+END;
+
+==================================================================
+
+BEGIN
+    OsszErtek('Kis János');
+END;
+
+==================================================================
+
+
+
+
+CREATE OR REPLACE PROCEDURE Darab(g IN VARCHAR) IS
+    darab NUMBER;
+BEGIN
+    SELECT COUNT(*) INTO darab FROM Zoo WHERE Gondozo = g;
+    DBMS_OUTPUT.PUT_LINE('Állatok darabszáma: ' || darab);
+END;
+
+==================================================================
+
+BEGIN
+    Darab('Kis János');
+END;
+
+==================================================================
+
+
+
+
+CREATE OR REPLACE PROCEDURE Statisztika(g IN VARCHAR) IS
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('Gondozó: ' || g);
+    Darab(g);
+    OsszSuly(g);
+    OsszErtek(g);
+END;
+
+==================================================================
+
+BEGIN
+    Statisztika('Kis János');
+END;
