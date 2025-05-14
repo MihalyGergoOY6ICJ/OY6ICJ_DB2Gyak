@@ -1,0 +1,276 @@
+==========================================================================================================================================
+
+CREATE OR REPLACE PACKAGE StudentPackage AS
+    PROCEDURE New(neptun IN CHAR, n IN CHAR, credit IN NUMBER, birth IN DATE, email IN CHAR);
+    PROCEDURE Mod(n IN CHAR, credit IN NUMBER);
+    PROCEDURE Del(n IN CHAR);
+    PROCEDURE GetStudent(nep IN CHAR);
+    PROCEDURE GetFailingStudents;
+END StudentPackage;
+
+==========================================================================================================================================
+
+CREATE OR REPLACE PACKAGE BODY StudentPackage AS
+    PROCEDURE New(neptun IN CHAR, n IN CHAR, credit IN NUMBER, birth IN DATE, email IN CHAR) IS
+    BEGIN 
+        INSERT INTO Student VALUES(neptun, n, credit, birth, email);
+    END;
+
+    PROCEDURE Mod(n IN CHAR, credit IN NUMBER) IS
+    BEGIN
+        UPDATE Student SET credit_sum = credit WHERE Neptun = n;
+        IF sql%notfound THEN
+            DBMS_OUTPUT.PUT_LINE('There is not a student with neptun: ' || n);
+        END IF;
+    END;
+
+    PROCEDURE Del(n IN CHAR) IS
+    BEGIN
+        DELETE FROM Student WHERE neptun = n;
+        IF sql%notfound THEN
+            DBMS_OUTPUT.PUT_LINE('There is not a student with neptun: ' || n);
+        END IF;
+    END;
+
+    PROCEDURE GetStudent(nep IN CHAR) IS
+    n Student.name%TYPE;
+    credit Student.credit_sum%TYPE;
+    birth Student.date_of_birth%TYPE;
+    email Student.email%TYPE;
+    BEGIN
+        SELECT Name, Credit_sum, Date_of_birth, Email INTO n, credit, birth, email FROM Student WHERE Neptun = nep;
+        DBMS_OUTPUT.PUT_LINE('Neptun: ' || nep);
+        DBMS_OUTPUT.PUT_LINE('Name: ' || n);
+        DBMS_OUTPUT.PUT_LINE('Credit sum: ' || credit);
+        DBMS_OUTPUT.PUT_LINE('Date of birth: ' || birth);
+        DBMS_OUTPUT.PUT_LINE('Email: ' || email);
+    EXCEPTION
+        WHEN no_data_found THEN
+            DBMS_OUTPUT.PUT_LINE('There is not a student with neptun: ' || nep);
+    END;
+
+    PROCEDURE GetFailingStudents IS
+    CURSOR cur IS SELECT Name, Credit_sum FROM Student WHERE Credit_sum < 50 ORDER BY Credit_sum DESC;
+    num NUMBER;
+    cv cur%ROWTYPE;
+    BEGIN
+        SELECT COUNT(*) INTO num FROM Student WHERE Credit_sum < 50;
+        DBMS_OUTPUT.PUT_LINE(num || ' studens are failing:');
+        OPEN cur;
+        LOOP
+            FETCH cur INTO cv;
+            EXIT WHEN cur%notfound;
+            DBMS_OUTPUT.PUT_LINE('Name: ' || cv.Name || ', Credit sum: ' || cv.Credit_sum);
+        END LOOP;
+    END;
+END StudentPackage
+
+==========================================================================================================================================
+BEGIN
+	StudentPackage.New('fjftjr', 'Nagy János', 67, '05/06/1986', 'nagyjanos@gmail.com');
+END;
+==========================================================================================================================================
+BEGIN
+	StudentPackage.Mod('fjftjr', 28);	
+END;
+==========================================================================================================================================
+BEGIN
+	StudentPackage.GetStudent('fjftjr');
+END;
+==========================================================================================================================================
+BEGIN
+	StudentPackage.Del('fjftjr');
+END;
+==========================================================================================================================================
+BEGIN
+	StudentPackage.GetFailingStudents();
+END;
+==========================================================================================================================================
+CREATE OR REPLACE PACKAGE CoursePackage AS
+    PROCEDURE New(id IN NUMBER, n IN CHAR, credit IN NUMBER, exam IN DATE, req IN NUMBER);
+    PROCEDURE Mod(i IN NUMBER, exam IN DATE);
+    PROCEDURE Del(i IN NUMBER);
+    PROCEDURE GetCourse(i IN NUMBER);
+    PROCEDURE GetAvgCreditOfRequiredCourses;
+
+END CoursePackage;
+
+==========================================================================================================================================
+
+CREATE OR REPLACE PACKAGE BODY CoursePackage AS
+    PROCEDURE New(id IN NUMBER, n IN CHAR, credit IN NUMBER, exam IN DATE, req IN NUMBER) IS
+    BEGIN
+        INSERT INTO Course VALUES(id, n, credit, exam, req);
+    END;
+
+    PROCEDURE Mod(i IN NUMBER, exam IN DATE) IS
+    BEGIN
+        UPDATE Course SET Exam_date = exam WHERE Id = i;
+        IF sql%notfound THEN
+            DBMS_OUTPUT.PUT_LINE('There is not a course with id: ' || i);
+        END IF;
+    END;
+
+    PROCEDURE Del(i IN NUMBER) IS
+    BEGIN
+        DELETE FROM Course WHERE Id = i;
+        IF sql%notfound THEN
+            DBMS_OUTPUT.PUT_LINE('There is not a course with id: ' || i);
+        END IF;
+    END;
+
+    PROCEDURE GetCourse(i IN NUMBER) IS
+    n Course.name%TYPE;
+    credit Course.credit%TYPE;
+    exam Course.exam_date%TYPE;
+    req Course.required%TYPE;
+    BEGIN
+        SELECT Name, Credit, Exam_date, Required INTO n, credit, exam, req FROM Course WHERE Id = i;
+        DBMS_OUTPUT.PUT_LINE('Id: ' || i);
+        DBMS_OUTPUT.PUT_LINE('Name: ' || n);
+        DBMS_OUTPUT.PUT_LINE('Credit: ' || credit);
+        DBMS_OUTPUT.PUT_LINE('Exam date: ' || exam);
+        DBMS_OUTPUT.PUT_LINE('Required: ' || req);
+
+    EXCEPTION
+        WHEN no_data_found THEN
+            DBMS_OUTPUT.PUT_LINE('There is not a course with id: ' || i);
+    END;
+
+    PROCEDURE GetAvgCreditOfRequiredCourses IS
+    CURSOR cur IS SELECT Name, Credit FROM Course WHERE Required = 1 ORDER BY Credit DESC;
+    num NUMBER;
+    cv cur%ROWTYPE;
+    BEGIN
+        SELECT AVG(Credit) INTO num FROM Course WHERE Required = 1;
+        DBMS_OUTPUT.PUT_LINE('The average credit is: ' || num);
+        OPEN cur;
+        LOOP
+            FETCH cur INTO cv;
+            EXIT WHEN cur%notfound;
+            DBMS_OUTPUT.PUT_LINE('Name: ' || cv.Name || ', Credit: ' || cv.Credit);
+        END LOOP;
+    END;
+
+END CoursePackage;
+
+==========================================================================================================================================
+BEGIN
+	CoursePackage.New(6, 'Testnevelés', 1, '06/09/2025', 0);
+END;
+==========================================================================================================================================
+
+BEGIN
+	CoursePackage.Mod(6, '06/20/2025');
+END;
+==========================================================================================================================================
+
+BEGIN
+	CoursePackage.GetCourse(6);
+END;
+==========================================================================================================================================
+BEGIN
+	CoursePackage.Del(6);
+END;
+==========================================================================================================================================
+BEGIN
+	CoursePackage.GetAvgCreditOfRequiredCourses();
+END;
+==========================================================================================================================================
+
+CREATE OR REPLACE PACKAGE HasPackage AS
+    PROCEDURE New(neptun IN CHAR, id IN NUMBER);
+    PROCEDURE Del(nep IN CHAR, i IN NUMBER);
+END HasPackage;
+
+==========================================================================================================================================
+
+CREATE OR REPLACE PACKAGE BODY HasPackage AS
+    PROCEDURE New(neptun IN CHAR, id IN NUMBER) IS
+    BEGIN
+        INSERT INTO Has VALUES(neptun, id);
+    END;
+
+    PROCEDURE Del(nep IN CHAR, i IN NUMBER) IS
+    BEGIN
+        DELETE FROM Has WHERE (Neptun = nep AND Id = i);
+        IF sql%notfound THEN
+            DBMS_OUTPUT.PUT_LINE('There is not a record with neptun: ' || nep || ' AND id: ' || i);
+        END IF;
+        
+    END;
+END HasPackage;
+
+==========================================================================================================================================
+BEGIN
+	HasPackage.New('fjftjr', 2);
+END;
+==========================================================================================================================================
+BEGIN
+	HasPackage.Del('fjftjr', 2);
+END;
+==========================================================================================================================================
+
+CREATE OR REPLACE TRIGGER StudentLogCreditSum AFTER INSERT OR UPDATE OR DELETE ON Student FOR EACH ROW
+BEGIN
+    IF INSERTING THEN
+        INSERT INTO Logs VALUES('Student', 'Insert', to_char(:NEW.neptun) || ' U ' || to_char(:NEW.credit_sum), sysdate);
+    ELSIF UPDATING THEN
+        INSERT INTO Logs VALUES('Student', 'Update', to_char(:NEW.neptun) || ' U ' || to_char(:OLD.credit_sum) || '->' || to_char(:NEW.credit_sum), sysdate);
+    ELSE
+        INSERT INTO Logs VALUES('Student', 'Delete', to_char(:OLD.neptun) || ' U ' || to_char(:OLD.credit_sum), sysdate);
+    END IF;
+END;
+
+==========================================================================================================================================
+
+CREATE TRIGGER CourseLogExamDate AFTER INSERT OR UPDATE OR DELETE ON Course FOR EACH ROW
+BEGIN
+    IF INSERTING THEN
+        INSERT INTO Logs VALUES('Course', 'Insert', to_char(:NEW.id) || ' U ' || to_char(:NEW.exam_date), sysdate);
+    ELSIF UPDATING THEN
+        INSERT INTO Logs VALUES('Course', 'Update', to_char(:NEW.id) || ' U ' || to_char(:OLD.exam_date) || '->' || to_char(:NEW.exam_date), sysdate);
+    ELSE
+        INSERT INTO Logs VALUES('Course', 'Delete', to_char(:OLD.id) || ' U ' || to_char(:OLD.exam_date), sysdate);
+    END IF;
+END;
+
+==========================================================================================================================================
+CREATE TABLE Logs(table_name CHAR(100), event CHAR(100), ch CHAR(100), t DATE);
+
+BEGIN
+	StudentPackage.New('fjftjr', 'Nagy János', 67, '05/06/1986', 'nagyjanos@gmail.com');
+	StudentPackage.Del('fjftjr');
+	CoursePackage.New(6, 'Testnevelés', 1, '06/09/2025', 0);
+	CoursePackage.Del(6);
+END;
+
+SELECT * FROM Logs;
+==========================================================================================================================================
+
+CREATE TRIGGER CourseAutoId BEFORE INSERT ON Course FOR EACH ROW
+DECLARE
+i Course.Id%type;
+BEGIN
+    SELECT MAX(Id) INTO i FROM Course;
+    :new.Id := i + 1;
+END;
+
+==========================================================================================================================================
+BEGIN
+	CoursePackage.New(0, 'Testnevelés', 1, '06/09/2025', 0);
+END;
+SELECT * FROM Course;
+
+==========================================================================================================================================
+
+CREATE OR REPLACE TRIGGER CourseDateLimit BEFORE INSERT OR UPDATE ON Course FOR EACH ROW
+BEGIN
+    IF :new.exam_date < sysdate THEN
+        RAISE_APPLICATION_ERROR (-20010,'The exam date cannot be earlier than today!');
+    END IF;
+END;
+==========================================================================================================================================
+BEGIN
+	CoursePackage.New(0, 'Testnevelés', 1, '06/09/2024', 0);
+END;
