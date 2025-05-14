@@ -1,0 +1,156 @@
+CREATE OR REPLACE PROCEDURE CostLessThan(v IN NUMBER) IS
+    CURSOR cur IS SELECT Nev, Fajta, Ertek FROM Zoo WHERE Ertek < v;
+    cv cur%rowtype;
+BEGIN
+    OPEN cur;
+    LOOP
+    FETCH cur INTO cv;
+        EXIT WHEN cur%notfound;
+        DBMS_OUTPUT.PUT_LINE('Név: ' || cv.Nev || ', Fajta: ' || cv.Fajta || ', Ár: ' || cv.Ertek);
+    END LOOP;
+END;
+
+===========================================================================================================================================
+BEGIN
+
+    CostsLessThan(3000000);
+END;
+
+===========================================================================================================================================
+
+CREATE OR REPLACE PROCEDURE BornAfterDate(d IN Date) IS
+    CURSOR cur IS SELECT Nev, Szuletett FROM Zoo WHERE Szuletett > d ORDER BY Szuletett ASC;
+    cv cur%rowtype;
+BEGIN
+    OPEN cur;
+    LOOP
+    FETCH cur INTO cv;
+        EXIT WHEN cur%notfound;
+        DBMS_OUTPUT.PUT_LINE('Név: ' || cv.Nev || ', Született: ' || cv.Szuletett);
+    END LOOP;
+END;
+
+===========================================================================================================================================
+
+BEGIN
+    BornAfterDate('1/1/2014');
+END;
+
+===========================================================================================================================================
+
+CREATE OR REPLACE PROCEDURE PetName(f IN CHAR, g IN CHAR) IS
+
+nev Zoo.Nev%TYPE;
+BEGIN
+    SELECT Nev INTO nev FROM Zoo WHERE Fajta = f AND Gondozo = g;
+    DBMS_OUTPUT.PUT_LINE('Név: ' || Nev);
+EXCEPTION
+    WHEN no_data_found THEN
+        DBMS_OUTPUT.PUT_LINE('Nincs ' || f || ' fajta állat ' || g || ' gondozóval!');
+    WHEN too_many_rows THEN
+        DBMS_OUTPUT.PUT_LINE('Egynél több ' || f || ' fajta állat ' || g || ' gondozóval!');
+END;
+
+===========================================================================================================================================
+
+BEGIN
+    PetName('Elefánt', 'Kis János');
+END;
+
+===========================================================================================================================================
+
+BEGIN
+    PetName('Asd', 'Kis János');
+END;
+
+===========================================================================================================================================
+
+BEGIN
+    PetName('Teve', 'Kis János');
+END;
+
+===========================================================================================================================================
+
+CREATE OR REPLACE PROCEDURE NumOfCarePet(g IN CHAR) IS
+
+num NUMBER;
+invalid_name EXCEPTION;
+BEGIN
+    SELECT COUNT(*) INTO num FROM Zoo WHERE Gondozo = g;
+    IF num = 0 THEN
+        RAISE invalid_name;
+    ELSE
+        DBMS_OUTPUT.PUT_LINE(num || 'db állat');
+    END IF;
+EXCEPTION
+    WHEN invalid_name THEN
+        DBMS_OUTPUT.PUT_LINE('Nincs ' || g || ' nevű gondozó!');
+END;
+
+===========================================================================================================================================
+
+BEGIN
+    NumOfCarePet('Kis János');
+END;
+
+===========================================================================================================================================
+
+BEGIN
+    NumOfCarePet('Asd');
+END;
+
+===========================================================================================================================================
+
+CREATE OR REPLACE PROCEDURE PetNameLength IS
+    CURSOR cur IS SELECT LENGTH(Nev) AS len, COUNT(*) AS db FROM Zoo GROUP BY LENGTH(Nev) ORDER BY LENGTH(Nev) ASC;
+    cv cur%rowtype;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('Név statisztika:');
+    OPEN cur;
+    LOOP
+    FETCH cur INTO cv;
+        EXIT WHEN cur%notfound;
+        DBMS_OUTPUT.PUT_LINE('Név hossza: ' || cv.len || ' karakter, darabszáma: ' || cv.db);
+    END LOOP;
+END;
+
+===========================================================================================================================================
+
+BEGIN
+    PetNameLength();
+END;
+
+===========================================================================================================================================
+
+CREATE OR REPLACE PROCEDURE ModCare(i IN NUMBER, g IN CHAR) IS
+
+num NUMBER;
+BEGIN
+    SELECT COUNT(*) INTO num FROM Zoo WHERE Id = i;
+    IF num = 0 THEN
+        RAISE_APPLICATION_ERROR (-20010,'Nincs ' || i || ' azonosítójú állat!');
+    END IF;
+    SELECT COUNT(*) INTO num FROM Zoo WHERE Gondozo = g;
+    IF num = 0 THEN
+        RAISE_APPLICATION_ERROR (-20010,'Nincs ' || g || ' nevű gondozó!');
+    END IF;
+    UPDATE Zoo SET Gondozo = g WHERE ID = i;
+END;
+
+===========================================================================================================================================
+
+BEGIN
+    ModCare(99, 'Kis János');
+END;
+
+===========================================================================================================================================
+
+BEGIN
+    ModCare(1, 'Asd');
+END;
+
+===========================================================================================================================================
+
+BEGIN
+    ModCare(1, 'Kemény Péter');
+END;
