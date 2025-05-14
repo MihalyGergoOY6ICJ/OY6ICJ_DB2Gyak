@@ -1,0 +1,77 @@
+CREATE OR REPLACE PACKAGE ZooPackage AS
+    PROCEDURE NewPet(i IN NUMBER, nev IN CHAR, fajta IN CHAR, szul IN DATE, suly IN NUMBER, ertek IN NUMBER, gond IN CHAR);
+    PROCEDURE DelPet(i IN NUMBER);
+    PROCEDURE ModPet(i IN NUMBER, gond IN CHAR);
+    PROCEDURE ListPet;
+    FUNCTION PetNumber RETURN NUMBER;
+END ZooPackage;
+
+===========================================================================================================================================
+
+CREATE OR REPLACE PACKAGE BODY ZooPackage AS
+    PROCEDURE NewPet(i IN NUMBER, nev IN CHAR, fajta IN CHAR, szul IN DATE, suly IN NUMBER, ertek IN NUMBER, gond IN CHAR) IS
+    BEGIN
+        INSERT INTO Zoo VALUES (i, nev, fajta, szul, suly, ertek, gond);
+    END;
+
+    PROCEDURE DelPet(i IN NUMBER) IS
+    BEGIN
+        DELETE FROM Zoo WHERE id = i;
+    END;
+
+    PROCEDURE ModPet(i IN NUMBER, gond IN CHAR) AS
+    BEGIN
+        UPDATE Zoo SET gondozo = gond WHERE id = i;
+    END;
+
+    PROCEDURE ListPet AS
+    CURSOR cur IS SELECT Nev, Gondozo FROM Zoo;
+    curV cur%rowtype;
+    BEGIN
+        OPEN cur;
+        LOOP
+            FETCH cur INTO curV;
+            EXIT WHEN cur%notfound;
+            DBMS_OUTPUT.PUT_LINE('Név: ' || curV.Nev || ', Gondozo: ' || curV.Gondozo);
+        END LOOP;
+    END;
+
+    FUNCTION PetNumber RETURN NUMBER AS
+
+    num NUMBER;
+    BEGIN
+        SELECT COUNT(*) INTO num FROM Zoo;
+
+        RETURN num;
+    END;
+END ZooPackage;
+
+===========================================================================================================================================
+
+BEGIN
+    NewPet(17, 'János', 'Kutya', '2/2/2000', 10, 9000, 'Boldog Éva');
+END;
+
+===========================================================================================================================================
+
+BEGIN
+    ModPet(17, 'Kis János');
+END;
+
+===========================================================================================================================================
+
+BEGIN
+    DelPet(17);
+END;
+
+===========================================================================================================================================
+
+BEGIN
+    ListPet();
+END;
+
+===========================================================================================================================================
+
+SELECT PetNumber() FROM DUAL;
+
+===========================================================================================================================================
